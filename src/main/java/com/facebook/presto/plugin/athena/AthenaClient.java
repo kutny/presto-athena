@@ -16,8 +16,14 @@ package com.facebook.presto.plugin.athena;
 import com.facebook.presto.plugin.jdbc.*;
 
 import javax.inject.Inject;
+import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Properties;
+import java.util.Set;
+import java.util.List;
+
+import com.facebook.presto.spi.SchemaTableName;
 import com.simba.athena.jdbc.Driver;
 import io.airlift.log.Logger;
 
@@ -32,7 +38,7 @@ import static com.google.common.base.Preconditions.checkArgument;
  */
 public class AthenaClient extends BaseJdbcClient {
 
-    private static final Logger log = Logger.get(AthenaClient.class);
+    private final Logger log2 = Logger.get(AthenaClient.class);
 
     @Inject
     public AthenaClient(JdbcConnectorId connectorId, BaseJdbcConfig config) throws SQLException {
@@ -40,13 +46,13 @@ public class AthenaClient extends BaseJdbcClient {
     }
 
     private static ConnectionFactory connectionFactory(BaseJdbcConfig config) {
+        Logger log = Logger.get(AthenaClient.class);
+
         log.info("Connection factory invoked");
 
         checkArgument(config.getConnectionUrl() != null, "Invalid JDBC URL for Athena connector");
         checkArgument(config.getConnectionUser() != null, "Invalid JDBC User for Athena connector");
         checkArgument(config.getConnectionPassword() != null, "Invalid JDBC Password for Athena connector");
-
-        //Class.forName("com.simba.athena.jdbc.Driver");
 
         Properties connectionProperties = basicConnectionProperties(config);
         connectionProperties.setProperty("UID", config.getConnectionUser());
@@ -57,5 +63,52 @@ public class AthenaClient extends BaseJdbcClient {
         log.info(config.getConnectionUrl());
 
         return new DriverConnectionFactory(new Driver(), config.getConnectionUrl(), connectionProperties);
+    }
+
+    @Override
+    public Set<String> getSchemaNames() {
+        log("getSchemaNames");
+
+        return super.getSchemaNames();
+    }
+
+    protected ResultSet getTables(Connection connection, String schemaName, String tableName) throws SQLException {
+        log("getTables");
+
+        return super.getTables(connection, schemaName, tableName);
+    }
+
+    @Override
+    public JdbcTableHandle getTableHandle(SchemaTableName schemaTableName) {
+        log("getTableHandle");
+
+        return super.getTableHandle(schemaTableName);
+    }
+
+    @Override
+	public List<JdbcColumnHandle> getColumns(JdbcTableHandle tableHandle) {
+        log("getColumns");
+
+        return super.getColumns(tableHandle);
+    }
+
+    @Override
+	public List<SchemaTableName> getTableNames(String schema) {
+        log("getTableNames");
+
+        return super.getTableNames(schema);
+    }
+
+    @Override
+	protected SchemaTableName getSchemaTableName(ResultSet resultSet) throws SQLException {
+        log("getSchemaTableName");
+
+        return super.getSchemaTableName(resultSet);
+    }
+
+    private void log(String message) {
+        log2.info(message);
+        log2.debug(message);
+        log2.error(message);
     }
 }
